@@ -1,63 +1,55 @@
-import {createServer} from 'http';
-//http://localhost:8080/
-const server = createServer((req, res) => {
+import express from 'express';
+const app = express();
 
-    console.log(req.url, 'req')
-    console.log(req.method, 'method')
-    if(req.url === "/testRoute"){
-        res.setHeader("Content-Type", "application/json");
-        res.writeHead(200);
-    
-        const data = {
-            message: "this is testRoute",
-            timestamp: new Date().toISOString()
-        }
-      const jsonData = JSON.stringify(data);
-      res.end(jsonData);
-    } else if(req.url === "/"){
-        res.setHeader("Content-Type", "application/json");
-        res.writeHead(200);
-    
-        const data = {
-            message: "this is root",
-            timestamp: new Date().toISOString()
-        }
-        const jsonData = JSON.stringify(data);
-        res.end(jsonData);
-    } else {
-        res.setHeader("Content-Type", "application/json");
-        res.writeHead(404);
-    
-        const data = {
-            message: "this resource does not exist",
-            timestamp: new Date().toISOString()
-        }
-        const jsonData = JSON.stringify(data);
-        res.end(jsonData);
-    }
-   
-});
-const PORT = 8080 || process.env.PORT;
-server.listen((PORT), () => {
-    console.log(`Server running on: ${PORT}`)
-});
-server.on("error", (error) => {
-    console.log(error)
+const port = 8080 || process.env.PORT;
+
+app.get('/', (req, res) => {
+    res.send('Welcome to Recipes API')
 })
 
-// const http = require('http');
+const recipes = [
+    {id: 1, title: 'Pizza'},
+    {id: 2, title: 'Paella'}
+]
 
-// const requestListener = function (req, res) {
-    //res.setHeader("Content-Type", "application/json");
 
-//   res.writeHead(200);
-//   const data = {
-//     message: "Hello world",
-//     timestamp: new Date().toISOString()
-//   }
-//   const jsonData = JSON.stringify(data);
-//   res.end(jsonData);
-// }
+app.get('/recipes', (req, res) => {
+    const filter = req.query.search;
 
-// const server = http.createServer(requestListener);
-// server.listen(8080);
+   if(!filter){
+    return res.json(recipes);
+   }
+
+    const recipe = recipes.find(recipe => recipe.title.toLowerCase() === filter.toLowerCase());
+
+    if(!recipe){
+        return res.status(404).send('Recipe not found')
+    }
+
+    res.json(recipe)
+})
+
+
+
+app.get('/recipes/:id', (req, res) => {
+
+    const recipeId = parseInt(req.params.id);
+
+    const recipe = recipes.find(recipe => recipe.id === recipeId);
+
+    if(!recipe){
+        return res.status(404).send('Recipe not found')
+    }
+
+    res.json(recipe);
+})
+
+app.post('/recipes', (req, res) => {
+    res.json({sucess: 'New recipe created'})
+})
+
+
+
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`)
+})
