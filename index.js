@@ -1,52 +1,56 @@
 import express from 'express';
+import {pets} from './petList.js';
 const app = express();
 
 const port = 8080 || process.env.PORT;
 
 app.get('/', (req, res) => {
-    res.send('Welcome to Recipes API')
-})
+    res.send(`
+      <h1>Adopt a Pet!</h1>
+      <p>Browse through the links below to find your new furry friend:</p>
+      <ul>
+        <li><a href="/animals/dogs">Dogs</a></li>
+        <li><a href="/animals/cats">Cats</a></li>
+        <li><a href="/animals/rabbits">Rabbits</a></li>
+      </ul>
+    `);
+});
 
-const recipes = [
-    {id: 1, title: 'Pizza'},
-    {id: 2, title: 'Paella'}
-]
 
 
-app.get('/recipes', (req, res) => {
-    const filter = req.query.search;
+app.get('/animals/:pet_type', (req, res) => {
+    const petType = req.params.pet_type;
+    const petList = pets[petType];
+    
+    let content = `<h1>List of ${petType}</h1>`;
+    content += '<ul>';
+    
+    petList.forEach((pet, index) => {
+      content += `<li><a href="/animals/${petType}/${pet.name}">${pet.name}</a></li>`;
+    });
+    
+    content += '</ul>';
+    
+    res.send(content);
+  });
 
-   if(!filter){
-    return res.json(recipes);
-   }
-
-    const recipe = recipes.find(recipe => recipe.title.toLowerCase() === filter.toLowerCase());
-
-    if(!recipe){
-        return res.status(404).send('Recipe not found')
+  app.get('/animals/:pet_type/:pet_name', (req, res) => {
+    const petType = req.params.pet_type;
+    const petName = req.params.pet_name;
+    const typePet = pets[petType];
+    const findPet = typePet.find(pet => pet.name.toLowerCase() === petName.toLowerCase());
+    if(!findPet) {
+      res.status(404).send("Pet not found");
+      return;
     }
-
-    res.json(recipe)
-})
-
-
-
-app.get('/recipes/:id', (req, res) => {
-
-    const recipeId = parseInt(req.params.id);
-
-    const recipe = recipes.find(recipe => recipe.id === recipeId);
-
-    if(!recipe){
-        return res.status(404).send('Recipe not found')
-    }
-
-    res.json(recipe);
-})
-
-app.post('/recipes', (req, res) => {
-    res.json({sucess: 'New recipe created'})
-})
+  
+    let content = `<h1>${findPet.name}</h1>`;
+    content += `<img src="${findPet.url}" alt="${findPet.name}"/>`;
+    content += `<p>${findPet.description}</p>`;
+    content += `<ul><li>Breed: ${findPet.breed}</li><li>Age: ${findPet.age}</li></ul>`;
+    
+    res.send(content);
+  });
 
 
 
