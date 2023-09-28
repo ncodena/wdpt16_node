@@ -81,9 +81,7 @@ app.put('/api/countries/:code', countryValidation, (req, res) => {
     if (!country) {
         return res.status(404).json({ error: "Country not found" });
     }
-    //If a property exists in both country and req.body, the value in country will be overwritten by the value from req.body.
-    //If a property exists only in req.body, it will be added to country.
-    //If a property exists only in country, it will remain unchanged.
+
     Object.assign(country, req.body);
     res.json(country);
 });
