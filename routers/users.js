@@ -1,12 +1,12 @@
 import express from 'express';
 const usersRouter = express.Router();
 import { body, validationResult } from 'express-validator';
-import pool from '../pool.js';
+import pool from '../db/pool.js';
 
 const userValidation = [
     body('first_name').isString().notEmpty(),
     body('last_name').isString().notEmpty(),
-    body('age').isInt({ min: 0 }),
+    body('age').isInt({ min: 1 }),
 ];
 
 usersRouter.get("/", async (req, res) => {
