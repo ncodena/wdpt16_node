@@ -1,6 +1,7 @@
 import express from 'express';
 const studentsRouter = express.Router();
 import Student from "../models/Student.js";
+import Token from '../models/Token.js';
 
 const middlewareAuthorizationFunction = (req, res, next) => {
     //Perform some action on the request or response
@@ -26,9 +27,15 @@ studentsRouter.get("/", async (req, res) => {
     }
 })
 
+const middlewareErrorFunction = (err, req, res, next) => {
+    //Perform some action on the request or response
+    console.log(err);
+    const statusCode = err.statusCode || 500;
+    const statusMessage = err.message || "Internal server error";
+    res.status(statusCode).json({error: statusMessage})
+}
 
-
-studentsRouter.post("/", middlewareAuthorizationFunction, async (req, res) => {
+studentsRouter.post("/", async (req, res) => {
     const {name, first_name, email} = req.body;
     try {
       const response = await Student.create({name, first_name, email});
@@ -42,13 +49,49 @@ studentsRouter.post("/", middlewareAuthorizationFunction, async (req, res) => {
         return res.status(500).json(err)
     }
 })
-const middlewareErrorFunction = (err, req, res, next) => {
-    //Perform some action on the request or response
-    console.log(err);
-    const statusCode = err.statusCode || 500;
-    const statusMessage = err.message || "Internal server error";
-    res.status(statusCode).json({error: statusMessage})
+
+const secure = (req, res, next) => {
+    const token = req.params.token;
+    if(token && token.length > 3){
+        next()
+    } else {
+        next({statusCode: 403, message: "Forbidden"})
+    }
 }
+
+studentsRouter.post("/create-token/:userId", async (req, res, next) => {
+    console.log('hey there')
+    try{
+        const {tokenData} = req.body
+        //Save a token document to the db
+        const token = await Token.create({value: tokenData});
+        const {userId} = req.params;
+        //Update student document with tokenId value from the previous creation of the token
+        const student = await Student.findByIdAndUpdate(userId, {tokenId: token._id}, {new: true});
+        //If no student is found with the given ID, an error is thrown
+        if(!student) return next({statusCode: 404, message: "User not found"})
+        //Otherwise we send the student
+        res.send(student)
+    } catch(err){
+        next()
+    }
+}, middlewareErrorFunction)
+
+studentsRouter.get("/verify/:token", secure, async (req, res, next) => {
+    try {
+     //Check if the token is available in the database
+    const token = await Token.findOne({value: req.params.token});
+    if(!token) return next({statusCode: 401, message: "Invalid token!"})
+    //Check if the token is available on a user
+    const student = await Student.findOne({tokenId: token._id});
+    if(!student) return next({statusCode: 401, message: "Invalid token!"})
+    //if the user is linked to this tokemn
+    res.send("token valid");
+    } catch(err){
+        console.log(err)
+        next()
+    }
+}, middlewareErrorFunction)
 
 studentsRouter.put('/:name', middlewareAuthorizationFunction, async (req, res, next) => {
         const {newName} = req.body;
@@ -115,8 +158,6 @@ studentsRouter.delete("/:id", async (req, res) => {
         res.status(500).json(err)
     }
 })
-
-
 
 
 

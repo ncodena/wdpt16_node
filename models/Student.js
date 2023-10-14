@@ -28,6 +28,10 @@ const StudentSchema = new mongoose.Schema({
         //     message: props => `${props.value} is not a valid email address!`
         // },
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+    },
+    tokenId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Token'
     }
 })
 
