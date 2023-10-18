@@ -22,7 +22,6 @@ const middlewareAuthorizationFunction = (req, res, next) => {
     console.log(tokenData)
 
     //Verify token
-
     jwt.verify(tokenData, secret, (err, user) => {
         if(err){
             return res.sendStatus(401)
