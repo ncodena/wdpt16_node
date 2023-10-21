@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
     cors({
-      origin: "http://127.0.0.1:5173",
+      origin: "*",
       methods: ["GET", "POST", "PUT", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
       credentials: true,
