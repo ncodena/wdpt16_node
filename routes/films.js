@@ -25,8 +25,8 @@ filmsRouter.get("/:id", async (req, res) => {
 
 filmsRouter.post("/", async (req, res) => {
     try {
-        const {name, year, genre} = req.body;
-      const response = await Film.create({name, year, genre});
+        const {name, year, genre, img} = req.body;
+      const response = await Film.create({name, year, genre, img});
       res.json(response)
     } catch(err){
         res.status(500).json(err)
