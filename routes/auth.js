@@ -2,51 +2,48 @@ import express from 'express';
 import Student from "../models/Student.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
 const authRouter = express.Router();
 const secret = process.env.SECRET_TOKEN;
 
-const middlewareAuthorizationFunction = (req, res, next) => {
-}
 
 const generateToken = (data) => {
     return jwt.sign(data, secret, {expiresIn: '1800s'})
 }
 
-// GET /api/auth/login
-authRouter.get('/login', (req, res) => {
-    //GET /login: that sends an HTML form with two fields
-    //The result of this form is sent on POST /connect
-    res.send(`
-    <form action="/api/auth/connect" method="POST">
-        <input type="text" name="username" placeholder="Login username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="submit" value="Login">
-    </form>
-    `)
-});
+authRouter.post("/register", async (req, res) => {
+    const {name, email, password} = req.body;
+    try {
+        //Hash the password before saving to DB
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const response = await Student.create({name, email, password: hashedPassword});
+        res.status(201).json(response);
 
-// POST /api/auth/connect
-authRouter.post('/connect', async (req, res) => {
-    // we check if the username is john and the password doe in the body of the request
-    const {username, password} = req.body;
-    if(username === "john" && password === "doe"){
-        //if true: sign a JWT containing a payload with your super secret key.
-        const token = generateToken({user: username});
-        //Set the JWT as a header to the response
-        res.header("Authorization", 'Bearer ' + token);
-        //Send back an HTML form with only one field (token) so that the user can check the validity of its token
-        res.send(`
-        <form action="/api/auth/checkJWT" method="POST">
-            <input type="text" name="token" placeholder="Login token" required>
-            <input type="submit" value="Login">
-        </form>
-        `)
+    } catch(err){
+        return res.status(500).json(err)
     }
+})
 
-});
+authRouter.post("/login", async (req, res) => {
+    const { email, password} = req.body;
+    try {
+        //Find user in db
+        const user = await Student.findOne({email});
+        if(!user){
+            return res.status(400).send('Invalid credentials');
+        }
+        //Compare passwords
+        const validPassword = await bcrypt.compare(password, user.password)
+        if(!validPassword){
+            return res.status(400).send('Invalid credentials');
+        }
+        const token = generateToken({email: user.email});
+        res.json({token})
 
-// POST /api/auth/checkJWT
-authRouter.post('/checkJWT', middlewareAuthorizationFunction, (req, res) => {
-});
+
+    } catch(err){
+        return res.status(500).json(err)
+    }
+})
 
 export default authRouter;

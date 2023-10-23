@@ -1,6 +1,9 @@
 import express from 'express';
 const filmsRouter = express.Router();
 import Film from '../models/Film.js';
+import { middlewareAuthorizationFunction } from '../middlewares/authMiddleware.js';
+
+filmsRouter.use(middlewareAuthorizationFunction);
 
 filmsRouter.get("/", async (req, res) => {
     try {
@@ -45,9 +48,6 @@ filmsRouter.put("/:id", async (req, res) => {
         res.status(500).json(err)
     }
 })
-
-
-
 
 
 export default filmsRouter;
