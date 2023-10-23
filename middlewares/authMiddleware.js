@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const secret = process.env.JWT_SECRET;
+const secret = process.env.SECRET_TOKEN;
 
 export const middlewareAuthorizationFunction = (req, res, next) => {
     //Get token from header
