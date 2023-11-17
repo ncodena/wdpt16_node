@@ -37,8 +37,8 @@ authRouter.post("/login", async (req, res) => {
         if(!validPassword){
             return res.status(400).send('Invalid credentials');
         }
-        const token = generateToken({email: user.email});
-        res.json({token})
+        const token = generateToken({id: user._id});
+        res.json({token, user})
 
 
     } catch(err){
